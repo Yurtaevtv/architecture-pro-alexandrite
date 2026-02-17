@@ -1,4 +1,6 @@
 using NLog.Extensions.Logging;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
