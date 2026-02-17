@@ -25,12 +25,14 @@ otel.WithTracing(tracing =>
 {
     tracing.AddAspNetCoreInstrumentation();
     tracing.AddHttpClientInstrumentation();
+    tracing.AddOtlpExporter();
 });
 
 var settings = builder.Configuration.GetSection("Service").Get<ClientSettings>();
 
 builder.Services.AddHttpClient("service_b")
                 .ConfigureHttpClient(hc => hc.BaseAddress = new Uri(settings!.Url));
+
 
 
 var app = builder.Build();
