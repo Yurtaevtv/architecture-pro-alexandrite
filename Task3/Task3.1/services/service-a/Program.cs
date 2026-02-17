@@ -25,6 +25,7 @@ otel.WithMetrics(metrics =>
 // Add Tracing for ASP.NET Core and our custom ActivitySource and export via OTLP
 otel.WithTracing(tracing =>
 {
+    tracing.AddSource("service-a");
     tracing.AddAspNetCoreInstrumentation();
     tracing.AddHttpClientInstrumentation();
     tracing.AddOtlpExporter();
