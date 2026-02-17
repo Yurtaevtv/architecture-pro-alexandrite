@@ -16,6 +16,11 @@ spec:
         - name: service-a
           image: service-a:latest
           imagePullPolicy: IfNotPresent
+          env:
+          - name: Service__Url
+            value: http://service-b:8080
+          - name: 
+            value: http://service-b:8080
           ports:
             - containerPort: 8080
 ---

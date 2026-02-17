@@ -26,7 +26,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 ### 3. Развертывание Jaeger
 ```bash
 kubectl create namespace observability
-kubectl create -f https://github.com/jaegertracing/jaeger-operator/releases/download/v1.51.0/jaeger-operator.yaml -n observability
+kubectl create -f k8s/jaeger-operator.yaml -n observability
 kubectl apply -f k8s/jaeger-instance.yaml
 ```
 
@@ -44,6 +44,8 @@ kubectl apply -f k8s/services.yaml
 
 ### Доступ к Jaeger UI
 ```bash
+kubectl port-forward services/service-a 8080:8080
+kubectl port-forward services/service-b 8081:8080
 kubectl port-forward svc/simplest-query 16686:16686
 ```
 Откройте в браузере: http://localhost:16686
