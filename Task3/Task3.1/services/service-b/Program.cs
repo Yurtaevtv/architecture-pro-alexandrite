@@ -1,5 +1,6 @@
 using NLog.Extensions.Logging;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +10,8 @@ builder.Logging.AddConsole();
 builder.Logging.AddNLog("NLog.config");
 // Add services to the container.
 
-var otel = builder.Services.AddOpenTelemetry();
+var otel = builder.Services.AddOpenTelemetry()
+    .ConfigureResource(rb => rb.AddService("service-b"));
 
 // Add Metrics for ASP.NET Core and our custom metrics and export via OTLP
 otel.WithMetrics(metrics =>
