@@ -23,6 +23,7 @@ otel.WithTracing(tracing =>
 {
     tracing.AddAspNetCoreInstrumentation();
     tracing.AddHttpClientInstrumentation();
+    tracing.AddOtlpExporter();
 });
 
 var app = builder.Build();

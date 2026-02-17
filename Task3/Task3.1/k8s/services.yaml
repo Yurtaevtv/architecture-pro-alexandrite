@@ -19,8 +19,8 @@ spec:
           env:
           - name: Service__Url
             value: http://service-b:8080
-          - name: 
-            value: http://service-b:8080
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: http://simplest-query:16686
           ports:
             - containerPort: 8080
 ---
@@ -54,6 +54,9 @@ spec:
         - name: service-b
           image: service-b:latest
           imagePullPolicy: IfNotPresent
+          env:
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: http://simplest-query:16686
           ports:
             - containerPort: 8080
 ---
