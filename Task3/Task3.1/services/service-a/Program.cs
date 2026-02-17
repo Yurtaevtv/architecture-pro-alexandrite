@@ -1,4 +1,5 @@
 using NLog.Extensions.Logging;
+using OpenTelemetry.Exporter.Jaeger;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -13,21 +14,31 @@ builder.Logging.AddNLog("NLog.config");
 
 
 var otel = builder.Services.AddOpenTelemetry()
-    .ConfigureResource(rb => rb.AddService("service-a"));
+    .ConfigureResource(rb => rb.AddService(serviceName: builder.Environment.ApplicationName));
 
 // Add Metrics for ASP.NET Core and our custom metrics and export via OTLP
 otel.WithMetrics(metrics =>
 {
     // Metrics provider from OpenTelemetry
-    metrics.AddAspNetCoreInstrumentation();
+    // Metrics provider from OpenTelemetry
+    metrics.AddAspNetCoreInstrumentation()
+        // Metrics provides by ASP.NET Core in .NET 8
+        .AddMeter("Microsoft.AspNetCore.Hosting")
+        .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+        // Metrics provided by System.Net libraries
+        .AddMeter("System.Net.Http")
+        .AddMeter("System.Net.NameResolution");
 });
 
 // Add Tracing for ASP.NET Core and our custom ActivitySource and export via OTLP
 otel.WithTracing(tracing =>
 {
+    tracing.AddSource("service-a")
+        .ConfigureResource(res => res.AddService(serviceName: builder.Environment.ApplicationName));
     tracing.AddAspNetCoreInstrumentation();
     tracing.AddHttpClientInstrumentation();
     tracing.AddOtlpExporter();
+    tracing.AddJaegerExporter();
 });
 
 var settings = builder.Configuration.GetSection("Service").Get<ClientSettings>();
@@ -49,5 +60,6 @@ app.MapGet("/", async (IHttpClientFactory hcf) =>
 
     return await response.Content.ReadAsStringAsync();
 });
+
 
 app.Run();
