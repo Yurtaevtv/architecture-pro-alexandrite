@@ -10,23 +10,22 @@ builder.Logging.AddConsole();
 builder.Logging.AddNLog("NLog.config");
 // Add services to the container.
 
+// Настройка OpenTelemetry
+var otlpEndpoint = builder.Configuration.GetValue<string>("OTEL_EXPORTER_OTLP_ENDPOINT")
+    ?? "http://localhost:4317";
+var serviceName = builder.Configuration.GetValue<string>("OTEL_SERVICE_NAME") ?? "service-b";
+var serviceVersion = "1.0.0";
+
 var otel = builder.Services.AddOpenTelemetry()
-    .ConfigureResource(rb => rb.AddService("service-b"));
-
-// Add Metrics for ASP.NET Core and our custom metrics and export via OTLP
-otel.WithMetrics(metrics =>
-{
-    // Metrics provider from OpenTelemetry
-    metrics.AddAspNetCoreInstrumentation();
-});
-
-// Add Tracing for ASP.NET Core and our custom ActivitySource and export via OTLP
-otel.WithTracing(tracing =>
-{
-    tracing.AddAspNetCoreInstrumentation();
-    tracing.AddHttpClientInstrumentation();
-    tracing.AddOtlpExporter();
-});
+    .WithTracing(tracing =>
+    {
+        tracing.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
+            .AddAspNetCoreInstrumentation()
+            .AddOtlpExporter(opts =>
+            {
+                opts.Endpoint = new Uri(otlpEndpoint);
+            });
+    });
 
 var app = builder.Build();
 

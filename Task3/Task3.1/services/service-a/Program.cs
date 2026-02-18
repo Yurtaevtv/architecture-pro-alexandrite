@@ -1,45 +1,37 @@
 using NLog.Extensions.Logging;
-using OpenTelemetry.Exporter.Jaeger;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using ServiceA.Models.Settings;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.SetMinimumLevel(LogLevel.Trace);
 builder.Logging.AddConsole();
 builder.Logging.AddNLog("NLog.config");
-// Add services to the container.
 
+// Настройка OpenTelemetry
+var otlpEndpoint = builder.Configuration.GetValue<string>("OTEL_EXPORTER_OTLP_ENDPOINT")
+    ?? "http://localhost:4317";
+var serviceName = builder.Configuration.GetValue<string>("OTEL_SERVICE_NAME") ?? "service-a";
+var serviceVersion = "1.0.0";
+
+Console.WriteLine($"OTLEndpoint:{otlpEndpoint}");
 
 var otel = builder.Services.AddOpenTelemetry()
-    .ConfigureResource(rb => rb.AddService(serviceName: builder.Environment.ApplicationName));
+    .WithTracing(tracing =>
+    {
+        tracing.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
+            .AddAspNetCoreInstrumentation()
+            .AddOtlpExporter(opts =>
+            {
+                opts.Endpoint = new Uri(otlpEndpoint);
+            });
+    });
 
-// Add Metrics for ASP.NET Core and our custom metrics and export via OTLP
-otel.WithMetrics(metrics =>
-{
-    // Metrics provider from OpenTelemetry
-    // Metrics provider from OpenTelemetry
-    metrics.AddAspNetCoreInstrumentation()
-        // Metrics provides by ASP.NET Core in .NET 8
-        .AddMeter("Microsoft.AspNetCore.Hosting")
-        .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
-        // Metrics provided by System.Net libraries
-        .AddMeter("System.Net.Http")
-        .AddMeter("System.Net.NameResolution");
-});
-
-// Add Tracing for ASP.NET Core and our custom ActivitySource and export via OTLP
-otel.WithTracing(tracing =>
-{
-    tracing.AddSource("service-a")
-        .ConfigureResource(res => res.AddService(serviceName: builder.Environment.ApplicationName));
-    tracing.AddAspNetCoreInstrumentation();
-    tracing.AddHttpClientInstrumentation();
-    tracing.AddOtlpExporter();
-    tracing.AddJaegerExporter();
-});
 
 var settings = builder.Configuration.GetSection("Service").Get<ClientSettings>();
 

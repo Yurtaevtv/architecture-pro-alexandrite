@@ -18,13 +18,14 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
           - name: Service__Url
-            value: http://service-b:8080
-          - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: "http://simplest-collector.observability.svc.cluster.local:4317"
-          - name: OTEL_SERVICE_NAME
-            value: service-a
+            value: http://service-b:8080       
           - name: OTEL_TRACES_EXPORTER
-            value: otlp
+            value: "otlp"
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "http://simplest-collector:4317/"
+          - name: OTEL_EXPORTER_OTLP_PROTOCOL
+            value: "grpc"
+
           ports:
             - containerPort: 8080
 ---
@@ -59,12 +60,12 @@ spec:
           image: service-b:latest
           imagePullPolicy: IfNotPresent
           env:
-          - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://simplest-query:16686
           - name: OTEL_SERVICE_NAME
             value: "service-b"
-          - name: OTEL_TRACES_EXPORTER
-            value: "otlp"
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: "http://simplest-collector:4317/"
+          - name: OTEL_EXPORTER_OTLP_PROTOCOL
+            value: "grpc"
           ports:
             - containerPort: 8080
 ---

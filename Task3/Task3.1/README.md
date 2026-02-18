@@ -26,7 +26,11 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 ### 3. Развертывание Jaeger
 ```bash
 kubectl create namespace observability
-kubectl create -f k8s/jaeger-operator.yaml -n observability
+kubectl create -f ./k8s/jaeger-operator.yaml -n observability
+
+# Подождите, пока оператор полностью запустится
+kubectl wait --for=condition=ready pod -l name=jaeger-operator -n observability --timeout=60s
+
 kubectl apply -f k8s/jaeger-instance.yaml
 ```
 
@@ -38,6 +42,10 @@ minikube image build -t service-b:latest services/service-b/
 
 # Развертывание
 kubectl apply -f k8s/services.yaml
+
+# Удаление
+kubectl delete pod -l app=service-a
+kubectl delete pod -l app=service-b
 ```
 
 ## Проверка работы
